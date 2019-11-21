@@ -1,38 +1,38 @@
 import fs from 'fs';
 import childProcess from 'child_process';
-import Config from 'truffle-config';
-import Resolver from 'truffle-resolver';
-import compile from 'truffle-compile';
+// import Config from 'truffle-config';
+// import Resolver from 'truffle-resolver';
+// import compile from 'truffle-compile';
 
-export default function (src) {
+export default function (src, mappings, allowPaths) {
   // detect if we're in a truffle project
   return new Promise((resolve) => {
-    if (fs.existsSync(`${process.env.PWD}/truffle.js`)) {
-      const config = Config.default();
-      config.resolver = new Resolver(config);
-      config.rawData = true;
-      compile.all(config, (err, res) => {
-        if (err) { throw err; }
-        resolve({
-          contracts: Object.keys(res).reduce((o, k) => {
-            const { metadata, ...data } = res[k].rawData;
-            try {
-              const parsed = JSON.parse(metadata);
-              const fN = Object.keys(parsed.settings.compilationTarget)[0];
-              data.fileName = fN.indexOf(process.env.PWD) === 0 ? fN : `${process.env.PWD}/node_modules/${fN}`;
-              data.output = parsed.output;
-            } catch (e) {
-              console.log(`⚠️ Error parsing Contract: ${k}`);
-            }
-            return {
-              ...o,
-              [k]: data,
-            };
-          }, {}),
-        });
-      });
-    } else {
-      const exec = `solc --combined-json abi,asm,ast,bin,bin-runtime,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc ${src}`;
+    // if (fs.existsSync(`${process.env.PWD}/truffle.js`)) {
+    //   const config = Config.default();
+    //   config.resolver = new Resolver(config);
+    //   config.rawData = true;
+    //   compile.all(config, (err, res) => {
+    //     if (err) { throw err; }
+    //     resolve({
+    //       contracts: Object.keys(res).reduce((o, k) => {
+    //         const { metadata, ...data } = res[k].rawData;
+    //         try {
+    //           const parsed = JSON.parse(metadata);
+    //           const fN = Object.keys(parsed.settings.compilationTarget)[0];
+    //           data.fileName = fN.indexOf(process.env.PWD) === 0 ? fN : `${process.env.PWD}/node_modules/${fN}`;
+    //           data.output = parsed.output;
+    //         } catch (e) {
+    //           console.log(`⚠️ Error parsing Contract: ${k}`);
+    //         }
+    //         return {
+    //           ...o,
+    //           [k]: data,
+    //         };
+    //       }, {}),
+    //     });
+    //   });
+    // } else {
+      const exec = `solc ${mappings} ${allowPaths ? `--allow-paths ${allowPaths}` : ""} --combined-json abi,asm,ast,bin,bin-runtime,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc ${src}`;
       const res = JSON.parse(childProcess.execSync(exec));
       resolve({
         contracts: Object.keys(res.contracts).reduce((o, k) => {
@@ -53,6 +53,6 @@ export default function (src) {
           };
         }, {}),
       });
-    }
+    // }
   });
 }

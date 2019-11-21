@@ -110,7 +110,7 @@ export default function (opts) {
   // clear out the output folder (remove all json files)
   glob.sync(`${output}/*.json`).forEach(file => fs.unlinkSync(file));
   // get the natspec
-  return solc(opts.src).then(({ contracts }) => {
+  return solc(opts.src, opts.mappings, opts.allowPaths).then(({ contracts }) => {
     compile({ ...opts, output, contracts });
   });
 }
